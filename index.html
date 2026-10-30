@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jmpra.com</title>
+<meta name="description" content="Personal hub and private portfolio.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ec3013">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ec3013'/%3E%3Ctext x='16' y='23' font-family='Arial,sans-serif' font-weight='900' font-size='18' text-anchor='middle' fill='%23f3f2f2'%3Ejm%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#ec3013;height:100%;overflow:hidden;}
+*{box-sizing:border-box;}
+a{color:#201e1d;text-underline-offset:3px;}
+a:hover{color:#f3f2f2;}
+::selection{background:#201e1d;color:#f3f2f2;}
+
+.root{position:fixed;inset:0;background:#ec3013;color:#201e1d;overflow:hidden;font-family:'Archivo',system-ui,sans-serif;font-size:15px;line-height:1.55;}
+.root canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.layout{position:absolute;inset:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:clamp(16px,2.2vw,32px);pointer-events:none;}
+.bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 24px;font-size:13px;line-height:1.3;font-weight:600;}
+header.bar{padding-bottom:12px;border-bottom:2px solid #201e1d;}
+footer.bar{padding-top:12px;border-top:2px solid #201e1d;}
+.right{text-align:right;}
+.clock{font-variant-numeric:tabular-nums;}
+main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;align-items:end;padding:20px 0 12px;min-height:0;}
+h1{grid-column:1 / span 12;margin:0;display:flex;flex-direction:column;color:#f3f2f2;font-weight:900;font-size:min(34vh,28vw);line-height:0.94;padding-bottom:0.16em;letter-spacing:-0.035em;pointer-events:auto;user-select:none;cursor:default;}
+.row{display:flex;}
+.row2{align-items:flex-end;gap:0.12em;}
+[data-ch]{display:block;font-variation-settings:'wdth' 100,'wght' 900;}
+.tight{margin-left:-0.12em;}
+.tag{display:block;margin-left:0.1em;margin-bottom:0.22em;max-width:24ch;font-size:max(14px,0.065em);line-height:1.35;letter-spacing:0;font-weight:600;color:#201e1d;text-wrap:pretty;}
+</style>
+</head>
+<body>
+<div class="root" id="root">
+  <canvas id="canvas" aria-hidden="true"></canvas>
+
+  <div class="layout">
+    <header class="bar" data-rv>
+      <span style="font-weight:800;">jmpra.com</span>
+      <span class="right clock">UTC <span id="time">--:--:--</span></span>
+    </header>
+
+    <main>
+      <h1 id="word" aria-label="jmpra, private portfolio">
+        <span class="row" aria-hidden="true">
+          <span data-ch>j</span>
+          <span data-ch>m</span>
+        </span>
+        <span class="row row2" aria-hidden="true">
+          <span data-ch>p</span>
+          <span data-ch class="tight">r</span>
+          <span data-ch class="tight">a</span>
+          <span class="tag" data-rv>private portfolio</span>
+        </span>
+      </h1>
+    </main>
+
+    <footer class="bar" data-rv>
+      <span>No public access</span>
+      <span class="right">Click anywhere</span>
+    </footer>
+  </div>
+</div>
+
+<script>
+// Plain-JS port of the "jmpra B - Poster" Claude Design export (no runtime, no React).
+(() => {
+  const MOTION = 0.7;            // 0–1: how strongly the lines and letters react
+  const LINES = 'horizontal';    // 'horizontal' | 'vertical'
+
+  const root = document.getElementById('root');
+  const canvas = document.getElementById('canvas');
+  const word = document.getElementById('word');
+  const timeEl = document.getElementById('time');
+
+  // UTC clock
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    const d = new Date();
+    timeEl.textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  };
+  tick(); setInterval(tick, 1000);
+
+  // Entrance animation
+  const ease = 'cubic-bezier(.2,.9,.2,1)';
+  word.querySelectorAll('[data-ch]').forEach((el, i) => el.animate(
+    [{ opacity: 0, transform: 'translateY(30%) scaleY(1.3)', transformOrigin: 'bottom' },
+     { opacity: 1, transform: 'none', transformOrigin: 'bottom' }],
+    { duration: 1300, delay: 150 + i * 90, easing: ease, fill: 'backwards' }));
+  root.querySelectorAll('[data-rv]').forEach((el, i) => el.animate(
+    [{ opacity: 0 }, { opacity: 1 }],
+    { duration: 800, delay: 700 + i * 120, easing: 'ease-out', fill: 'backwards' }));
+
+  // Line field, letter weights, click ripples
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  const build = () => {
+    dpr = Math.min(window.devicePixelRatio || 1, 2); W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+  };
+  build();
+  new ResizeObserver(build).observe(canvas);
+
+  const m = { x: W * 0.6, y: H * 0.5, tx: 0, ty: 0, last: -1e9 }, ripples = [];
+  window.addEventListener('pointermove', e => { m.tx = e.clientX; m.ty = e.clientY; m.last = performance.now(); });
+  window.addEventListener('pointerdown', e => {
+    ripples.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+    if (ripples.length > 5) ripples.shift();
+  });
+
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const letters = Array.from(word.querySelectorAll('[data-ch]')).map(el => ({ el, w: 100, g: 900 }));
+  const vert = LINES === 'vertical';
+
+  const loop = now => {
+    requestAnimationFrame(loop);
+    let k = MOTION; if (reduce) k *= 0.3;
+    if (now - m.last > 3500) {
+      // Idle: the focus point drifts on its own
+      const t = now / 1000;
+      m.x += (W * 0.5 + Math.cos(t * 0.19) * W * 0.38 - m.x) * 0.012;
+      m.y += (H * 0.5 + Math.sin(t * 0.29) * H * 0.34 - m.y) * 0.012;
+    } else { m.x += (m.tx - m.x) * 0.2; m.y += (m.ty - m.y) * 0.2; }
+    for (let i = ripples.length - 1; i >= 0; i--) if (now - ripples[i].t > 2600) ripples.splice(i, 1);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const sig = 90 + 120 * k, s2 = 2 * sig * sig, amp = 0.55 + 0.9 * k;
+    const A = vert ? W : H, B = vert ? H : W, ma = vert ? m.x : m.y, mb = vert ? m.y : m.x;
+    const gap = 13, step = 6;
+    const path = new Path2D();
+    for (let a0 = gap / 2; a0 < A; a0 += gap) {
+      for (let b = 0; b <= B + step; b += step) {
+        const da = a0 - ma, db = b - mb;
+        let a = a0 + da * amp * Math.exp(-(da * da + db * db) / s2);
+        for (const r of ripples) {
+          const age = (now - r.t) / 1000, rad = age * 520;
+          const ra = vert ? r.x : r.y, rb = vert ? r.y : r.x;
+          const band = Math.hypot(a0 - ra, b - rb) - rad;
+          if (Math.abs(band) < 70) a += Math.sin(band / 9) * (1 - Math.abs(band) / 70) * (1 - age / 2.6) * 9 * (0.4 + k);
+        }
+        const x = vert ? a : b, y = vert ? b : a;
+        if (b === 0) path.moveTo(x, y); else path.lineTo(x, y);
+      }
+    }
+    ctx.strokeStyle = 'rgba(32,30,29,0.26)'; ctx.lineWidth = 1; ctx.stroke(path);
+
+    const fs = parseFloat(getComputedStyle(word).fontSize) || 300;
+    const ls = fs * (0.3 + 0.35 * k);
+    for (const L of letters) {
+      const bx = L.el.getBoundingClientRect();
+      const cx = bx.left + bx.width / 2, cy = bx.top + bx.height * 0.55;
+      let t = Math.exp(-((m.x - cx) ** 2 + (m.y - cy) ** 2) / (2 * ls * ls));
+      for (const r of ripples) {
+        const age = (now - r.t) / 1000, band = Math.abs(Math.hypot(cx - r.x, cy - r.y) - age * 520);
+        if (band < 180) t = Math.max(t, (1 - band / 180) * (1 - age / 2.6));
+      }
+      const tg = 900 - 760 * t * (0.4 + 0.6 * k), tw = 100 + 25 * t;
+      L.w += (tw - L.w) * 0.12; L.g += (tg - L.g) * 0.12;
+      L.el.style.fontVariationSettings = `'wdth' ${L.w.toFixed(1)}, 'wght' ${L.g.toFixed(0)}`;
+    }
+  };
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
